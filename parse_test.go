@@ -21,3 +21,21 @@ func Test_Parse(t *testing.T) {
 	}
 
 }
+
+func TestFile(t *testing.T) {
+	dt, err := ReadFile("test_data/t1.lz")
+	if err != nil {
+		t.Error(err)
+	}
+	if len(dt) != 4 {
+		t.Errorf("Expected 4 chars, got: %d", len(dt))
+	}
+
+	w, ok := ByName(dt, "warrior")
+	if !ok {
+		t.Errorf("Expected warrior to exist")
+	}
+	at, ok := w.PString("at", "At")
+	t.Logf(at)
+
+}
