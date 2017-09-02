@@ -1,0 +1,28 @@
+Warrior:
+    At:2h+6
+    Ad:h+3
+    Ct:2h+6
+    Cd:h+3
+    H:3
+
+Rider:
+    Attack:2h+7
+    Ad:h+1
+    Ct:2h+4
+    Cd:h+3
+    H:3
+
+Defender:
+    At:h+4
+    Ad:h+7
+    Ct:4h+6
+    Cd:h+2
+    H:4
+
+Swordsman:
+    At:3h+6
+    Ad:h+7
+    Ct:3h+6
+    Cd:h+7
+    H:4
+
