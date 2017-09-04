@@ -2,11 +2,12 @@ package lazyf
 
 import (
 	"bufio"
-	"errors"
 	"io"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 type LZ struct {
@@ -77,14 +78,77 @@ func ReadFile(fname string) ([]LZ, error) {
 	return Read(f)
 }
 
-func (lz LZ) PString(ns ...string) (string, bool) {
+func (lz LZ) PString(ns ...string) (string, error) {
 	for _, v := range ns {
 		res, ok := lz.Deets[v]
 		if ok {
-			return res, true
+			return res, nil
 		}
 	}
-	return "", false
+	return "", errors.New("Item not found")
+}
+
+func (lz LZ) PInt(ns ...string) (int, error) {
+	s, err := lz.PString(ns...)
+	if err != nil {
+		return 0, err
+	}
+	conv, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, errors.Wrap(err, "Could not convert Item")
+	}
+
+	return conv, nil
+}
+
+func (lz LZ) PBool(ns ...string) (bool, error) {
+	s, err := lz.PString(ns...)
+	if err != nil {
+		return false, err
+	}
+
+	conv, err := strconv.ParseBool(s)
+	if err != nil {
+		return false, errors.Wrap(err, "Could not convert Item")
+	}
+
+	return conv, nil
+}
+
+func (lz LZ) PFloat(ns ...string) (float64, error) {
+	s, err := lz.PString(ns...)
+	if err != nil {
+		return 0, err
+	}
+
+	conv, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0, errors.Wrap(err, "Could not convert Item")
+	}
+
+	return conv, nil
+}
+
+func (lz LZ) PIntD(def int, ns ...string) int {
+	r, err := lz.PInt(ns...)
+	if err != nil {
+		return def
+	}
+	return r
+}
+func (lz LZ) PBoolD(def bool, ns ...string) bool {
+	r, err := lz.PBool(ns...)
+	if err != nil {
+		return def
+	}
+	return r
+}
+func (lz LZ) PFloatD(def float64, ns ...string) float64 {
+	r, err := lz.PFloat(ns...)
+	if err != nil {
+		return def
+	}
+	return r
 }
 
 func ByName(ll []LZ, s string) (LZ, bool) {

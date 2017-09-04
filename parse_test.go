@@ -34,8 +34,33 @@ func TestFile(t *testing.T) {
 	w, ok := ByName(dt, "warrior")
 	if !ok {
 		t.Errorf("Expected warrior to exist")
+		t.FailNow()
 	}
-	at, ok := w.PString("at", "At")
-	t.Logf(at)
+	at, err := w.PString("at", "At")
+	if err != nil {
+		t.Errorf("Expected Warrior to have attack")
+	}
+	if at != "2h+6" {
+		t.Errorf("Expected Warrior to have 2h+6 : got %d", at)
+	}
 
+	_, err = w.PString("hat")
+	if err == nil {
+		t.Errorf("Expected Warrior not to have hat")
+	}
+
+	h := w.PIntD(5, "H")
+	if h != 3 {
+		t.Errorf("Expected Warrior Health to be 3, got %d", h)
+	}
+
+	h = w.PIntD(5, "Hat")
+	if h != 5 {
+		t.Errorf("Expected Warrior Had to be 5, got %d", h)
+	}
+
+	h = w.PIntD(5, "At")
+	if h != 5 {
+		t.Errorf("Attack should not be parseable int")
+	}
 }
