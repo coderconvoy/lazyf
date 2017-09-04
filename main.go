@@ -41,7 +41,9 @@ func Read(r io.Reader) ([]LZ, error) {
 	res := []LZ{}
 	var curr LZ
 
+	line := 0
 	for sc.Scan() {
+		line++
 		t := sc.Text()
 		tr := strings.TrimSpace(t)
 		if len(tr) == 0 {
@@ -61,7 +63,7 @@ func Read(r io.Reader) ([]LZ, error) {
 
 		ss := strings.SplitN(tr, ":", 2)
 		if len(ss) != 2 {
-			return res, errors.New("No Colon in deets line")
+			return res, errors.Errorf("No Colon in deets: line %d", line)
 		}
 		curr.Deets[ss[0]] = ss[1]
 	}
@@ -129,6 +131,13 @@ func (lz LZ) PFloat(ns ...string) (float64, error) {
 	return conv, nil
 }
 
+func (lz LZ) PStringD(def string, ns ...string) string {
+	r, err := lz.PString(ns...)
+	if err != nil {
+		return def
+	}
+	return r
+}
 func (lz LZ) PIntD(def int, ns ...string) int {
 	r, err := lz.PInt(ns...)
 	if err != nil {
