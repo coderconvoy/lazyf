@@ -90,6 +90,23 @@ func (lz LZ) PString(ns ...string) (string, error) {
 	return "", errors.New("Item not found")
 }
 
+func (lz LZ) PStringAr(ns ...string) []string {
+	res := []string{}
+	for _, v := range ns {
+		i := 0
+		for {
+			s, ok := lz.Deets[v+strconv.Itoa(i)]
+			if !ok {
+				break
+			}
+			res = append(res, s)
+			i++
+		}
+
+	}
+	return res
+}
+
 func (lz LZ) PInt(ns ...string) (int, error) {
 	s, err := lz.PString(ns...)
 	if err != nil {
