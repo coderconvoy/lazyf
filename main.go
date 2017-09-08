@@ -63,7 +63,7 @@ func Read(r io.Reader) ([]LZ, error) {
 
 		ss := strings.SplitN(tr, ":", 2)
 		if len(ss) != 2 {
-			return res, errors.Errorf("No Colon in deets: line %d", line)
+			return res, NewLineErr(line, "No Colon")
 		}
 		curr.Deets[ss[0]] = ss[1]
 	}
