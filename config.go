@@ -19,3 +19,19 @@ func GetConfig(locs ...string) ([]LZ, error) {
 	return []LZ{}, errors.Errorf("arr")
 
 }
+
+func GetConfigN(n int, confLocs ...string) (LZ, error) {
+
+	carr, err := GetConfig(confLocs...)
+
+	if err != nil {
+		return LZ{}, err
+	}
+
+	if len(carr) < n {
+		return LZ{}, errors.Errorf("No Entry in Config")
+	}
+
+	return carr[n], nil
+
+}
