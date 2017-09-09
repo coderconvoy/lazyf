@@ -7,6 +7,11 @@ type LineErr struct {
 	l int
 }
 
+type Liner interface {
+	error
+	Line() int
+}
+
 func NewLineErr(n int, s string) LineErr {
 	return LineErr{
 		s: s,

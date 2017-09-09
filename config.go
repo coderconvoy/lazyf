@@ -8,7 +8,7 @@ func GetConfig(locs ...string) ([]LZ, error) {
 	for _, v := range locs {
 		lz, err := ReadFile(v)
 		if err != nil {
-			if e, ok := err.(LineErr); ok {
+			if e, ok := err.(Liner); ok {
 				return lz, e
 			}
 			continue
@@ -16,7 +16,7 @@ func GetConfig(locs ...string) ([]LZ, error) {
 		return lz, nil
 	}
 
-	return []LZ{}, errors.Errorf("arr")
+	return []LZ{}, errors.Errorf("Config not found")
 
 }
 
