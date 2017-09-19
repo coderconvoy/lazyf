@@ -8,8 +8,10 @@ func GetConfig(locs ...string) ([]LZ, error) {
 	for _, v := range locs {
 		lz, err := ReadFile(v)
 		if err != nil {
-			if e, ok := err.(Liner); ok {
-				return lz, e
+			if _, ok := err.(interface {
+				NErrs() int
+			}); ok {
+				return lz, err
 			}
 			continue
 		}

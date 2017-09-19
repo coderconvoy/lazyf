@@ -2,21 +2,23 @@ package lazyf
 
 import "fmt"
 
+type ErrGroup []error
+
+func (eg ErrGroup) Error() string {
+	res := ""
+	for _, v := range eg {
+		res += v.Error() + "\n"
+	}
+	return res
+}
+
+func (eg ErrGroup) NErrs() int {
+	return len(eg)
+}
+
 type LineErr struct {
 	s string
 	l int
-}
-
-type Liner interface {
-	error
-	Line() int
-}
-
-func NewLineErr(n int, s string) LineErr {
-	return LineErr{
-		s: s,
-		l: n,
-	}
 }
 
 func (l LineErr) Error() string {

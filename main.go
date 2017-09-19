@@ -15,31 +15,27 @@ type LZ struct {
 	Deets map[string]string
 }
 
+// ParseLZ takes a ":" separated string, and puts the first section as the name, and the rest as ordered details belonging to the LZ object returned
+//Used as part of the main Parsing Method, for files
 func ParseLZ(s string) LZ {
 	s = strings.TrimSpace(s)
 	ss := strings.Split(s, ":")
-	for k, v := range ss {
-		ss[k] = strings.TrimSpace(v)
+	res := LZ{strings.TrimSpace(ss[0]), map[string]string{}}
+	for k, v := range ss[1:] {
+		res.Deets["ex"+strconv.Itoa(k)] = strings.TrimSpace(v)
 	}
-	return NewLZ(ss[0], ss[1:]...)
+	return res
 
 }
 
-func NewLZ(name string, ex ...string) LZ {
-	mp := make(map[string]string)
-	for k, v := range ex {
-		mp["ex"+strconv.Itoa(k)] = v
-	}
-	return LZ{
-		Name:  name,
-		Deets: mp,
-	}
-}
-
+//Read Takes a reader in .lz format and converts it to a [] of LZ
+//Errors are normally in case of missing colons etc.
 func Read(r io.Reader) ([]LZ, error) {
 	sc := bufio.NewScanner(r)
 	res := []LZ{}
 	var curr LZ
+
+	errs := ErrGroup{}
 
 	line := 0
 	for sc.Scan() {
@@ -61,16 +57,27 @@ func Read(r io.Reader) ([]LZ, error) {
 
 		//Deets
 
+		if curr.Deets == nil {
+			errs = append(errs, LineErr{"No Object Defined", line})
+		}
+
 		ss := strings.SplitN(tr, ":", 2)
 		if len(ss) != 2 {
-			return res, NewLineErr(line, "No Colon")
+			errs = append(errs, LineErr{"No Colon", line})
+			continue
 		}
 		curr.Deets[ss[0]] = ss[1]
 	}
 
-	return res, nil
+	if len(errs) > 0 {
+		return res, errs
+	}
+	return res, sc.Err()
 }
 
+//ReadFile is a wrapper for Read, which takes a filename instead of a Reader
+//Errors on read error as well format errors.
+//If the error is a format error it will fulfil the interface{NErrs()int}
 func ReadFile(fname string) ([]LZ, error) {
 	f, err := os.Open(fname)
 	if err != nil {
@@ -80,6 +87,7 @@ func ReadFile(fname string) ([]LZ, error) {
 	return Read(f)
 }
 
+//PString returns a string for the value matching the first string in ns from its properties. if none are found, this will return an error.
 func (lz LZ) PString(ns ...string) (string, error) {
 	for _, v := range ns {
 		res, ok := lz.Deets[v]
@@ -90,6 +98,8 @@ func (lz LZ) PString(ns ...string) (string, error) {
 	return "", errors.New("Item not found")
 }
 
+//PStringAr, will return a slice of strings, for the propertyname followed by increasing increments of ns0, ns1, ns2 ...
+//eg if ns is "holding", then "holding0", "holding1", etc until one is not found.
 func (lz LZ) PStringAr(ns ...string) []string {
 	res := []string{}
 	for _, v := range ns {
@@ -107,6 +117,7 @@ func (lz LZ) PStringAr(ns ...string) []string {
 	return res
 }
 
+//PInt will try to convert the result of PString into an Int, errors on not found or on conversion error
 func (lz LZ) PInt(ns ...string) (int, error) {
 	s, err := lz.PString(ns...)
 	if err != nil {
@@ -120,6 +131,7 @@ func (lz LZ) PInt(ns ...string) (int, error) {
 	return conv, nil
 }
 
+//PBool will try to convert the result of PString into an Bool, errors on not found or on conversion error
 func (lz LZ) PBool(ns ...string) (bool, error) {
 	s, err := lz.PString(ns...)
 	if err != nil {
@@ -134,6 +146,7 @@ func (lz LZ) PBool(ns ...string) (bool, error) {
 	return conv, nil
 }
 
+//PFloat will try to convert the result of PString into an float64, errors on not found or on conversion error
 func (lz LZ) PFloat(ns ...string) (float64, error) {
 	s, err := lz.PString(ns...)
 	if err != nil {
@@ -148,6 +161,7 @@ func (lz LZ) PFloat(ns ...string) (float64, error) {
 	return conv, nil
 }
 
+//PStringD takes and returns a default result in case of error otherwise acts as PString
 func (lz LZ) PStringD(def string, ns ...string) string {
 	r, err := lz.PString(ns...)
 	if err != nil {
@@ -155,6 +169,8 @@ func (lz LZ) PStringD(def string, ns ...string) string {
 	}
 	return r
 }
+
+//PIntD takes and returns a default result in case of error otherwise acts as PInt
 func (lz LZ) PIntD(def int, ns ...string) int {
 	r, err := lz.PInt(ns...)
 	if err != nil {
@@ -162,6 +178,8 @@ func (lz LZ) PIntD(def int, ns ...string) int {
 	}
 	return r
 }
+
+//PBoolD takes and returns a default result in case of error otherwise acts as PBool
 func (lz LZ) PBoolD(def bool, ns ...string) bool {
 	r, err := lz.PBool(ns...)
 	if err != nil {
@@ -169,6 +187,8 @@ func (lz LZ) PBoolD(def bool, ns ...string) bool {
 	}
 	return r
 }
+
+//PFloatD takes and returns a default result in case of error otherwise acts as PFloat
 func (lz LZ) PFloatD(def float64, ns ...string) float64 {
 	r, err := lz.PFloat(ns...)
 	if err != nil {
@@ -177,6 +197,7 @@ func (lz LZ) PFloatD(def float64, ns ...string) float64 {
 	return r
 }
 
+//Finds an item in the list by name
 func ByName(ll []LZ, s string) (LZ, bool) {
 	s = strings.ToLower(s)
 	for _, v := range ll {
