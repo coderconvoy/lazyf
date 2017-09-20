@@ -59,6 +59,7 @@ func Read(r io.Reader) ([]LZ, error) {
 
 		if curr.Deets == nil {
 			errs = append(errs, LineErr{"No Object Defined", line})
+			continue
 		}
 
 		ss := strings.SplitN(tr, ":", 2)
