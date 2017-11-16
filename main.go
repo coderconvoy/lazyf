@@ -67,7 +67,7 @@ func Read(r io.Reader) ([]LZ, error) {
 			errs = append(errs, LineErr{"No Colon", line})
 			continue
 		}
-		curr.Deets[ss[0]] = ss[1]
+		curr.Deets[strings.TrimSpace(ss[0])] = strings.TrimSpace(ss[1])
 	}
 
 	if len(errs) > 0 {
@@ -108,12 +108,18 @@ func (lz LZ) PStringAr(ns ...string) []string {
 		for {
 			s, ok := lz.Deets[v+strconv.Itoa(i)]
 			if !ok {
-				break
+				if i != 0 {
+					break
+				}
+				s, ok = lz.Deets[v]
+				if !ok {
+					break
+				}
+
 			}
 			res = append(res, s)
 			i++
 		}
-
 	}
 	return res
 }
