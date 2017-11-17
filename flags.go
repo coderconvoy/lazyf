@@ -10,14 +10,20 @@ var flagloc string
 type flagger struct {
 	fset  *flag.FlagSet
 	flist map[string]*string
+	blist map[string]*bool
 	args  []string
 }
 
 //defFlagger will normally be used, but for testing other flaggers may be
-var defFlagger flagger = flagger{
-	fset:  flag.CommandLine,
-	flist: make(map[string]*string),
-	args:  os.Args[1:],
+var defFlagger flagger = NewFlagger(flag.CommandLine, os.Args[1:])
+
+func NewFlagger(fset *flag.FlagSet, args []string) flagger {
+	return flagger{
+		fset:  fset,
+		args:  args,
+		flist: make(map[string]*string),
+		blist: make(map[string]*bool),
+	}
 }
 
 //FlagString adds the flag, for setting the first section of the lzconfig
@@ -29,6 +35,17 @@ func (ff flagger) FlagString(f, cname, info string) *string {
 	s := ff.fset.String(f, "", info)
 
 	ff.flist[cname] = s
+	return s
+}
+
+//FlagBool adds a boolean flag. False is considered unset for adding at core
+func FlagBool(f, cname, info string) *bool {
+	return defFlagger.FlagBool(f, cname, info)
+}
+
+func (ff flagger) FlagBool(f, cname, info string) *bool {
+	s := ff.fset.Bool(f, false, "info")
+	ff.blist[cname] = s
 	return s
 }
 
@@ -50,6 +67,7 @@ func (ff flagger) FlagLoad(f string, deflocs ...string) []LZ {
 		cfig = append(cfig, LZ{})
 	}
 
+	//Strings
 	for k, v := range ff.flist {
 		if *v != "" {
 			cfig[0].Deets[k] = *v
@@ -57,5 +75,15 @@ func (ff flagger) FlagLoad(f string, deflocs ...string) []LZ {
 		}
 		*v = cfig[0].PStringD("", k)
 	}
+
+	//Bools are only false if not set in config, and not flagged
+	for k, v := range ff.blist {
+		if *v {
+			cfig[0].Deets[k] = "T"
+			continue
+		}
+		*v = cfig[0].PBoolD(false, k)
+	}
+
 	return cfig
 }
