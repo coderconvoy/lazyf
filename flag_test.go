@@ -5,6 +5,13 @@ import (
 	"testing"
 )
 
+func pmatch(t *testing.T, exp, got, mess string) {
+	if exp != got {
+		t.Errorf(mess+": exp '%s', got '%s'", exp, got)
+	}
+
+}
+
 func qerr(t *testing.T, err error, msg string, fargs ...string) {
 	if err != nil {
 		t.Errorf(msg+":%s", append(fargs, err.Error()))
@@ -17,10 +24,10 @@ func Test_Flags(t *testing.T) {
 		flist: make(map[string]*string),
 		fset:  flag.NewFlagSet("test", flag.ContinueOnError),
 	}
-	fg.FlagString("g", "greeting", "A Greeting")
-	fg.FlagString("a", "amount", "An Amount")
-	fg.FlagString("d", "data", "Some Data")
-	fg.FlagString("s", "size", "A size")
+	gpp := fg.FlagString("g", "greeting", "A Greeting")
+	app := fg.FlagString("a", "amount", "An Amount")
+	dpp := fg.FlagString("d", "data", "Some Data")
+	spp := fg.FlagString("s", "size", "A size")
 	dt := fg.FlagLoad("cf", "test_data/flagtest1.lz")
 
 	//greeting -- exists overwritten
@@ -30,6 +37,7 @@ func Test_Flags(t *testing.T) {
 	if s != "hello" {
 		t.Errorf("greeting expected '%s', got '%s'", "hello", s)
 	}
+	pmatch(t, *gpp, s, "Greeting Pointer")
 
 	//amount -- exists !overwritten
 	s, err = dt[0].PString("amount")
@@ -38,6 +46,7 @@ func Test_Flags(t *testing.T) {
 	if s != "twenty" {
 		t.Errorf("amount expected 'twenty', got '%s'", s)
 	}
+	pmatch(t, *app, s, "Amount Pointer")
 
 	//size -- !exists overwritten
 	s, err = dt[0].PString("size")
@@ -45,6 +54,7 @@ func Test_Flags(t *testing.T) {
 	if s != "small" {
 		t.Errorf("size expected 'small', got '%s'", s)
 	}
+	pmatch(t, *spp, s, "Size Pointer")
 
 	//slob -- !exists !overwritten
 	s, err = dt[0].PString("slob")
@@ -58,6 +68,7 @@ func Test_Flags(t *testing.T) {
 	if s != "MEGABYTES" {
 		t.Errorf("data expected 'MEGABYTES', got '%s'", s)
 	}
+	pmatch(t, *dpp, s, "Data Pointer")
 
 }
 
@@ -68,7 +79,9 @@ func Test_FileFind(t *testing.T) {
 		fset:  flag.NewFlagSet("test", flag.ContinueOnError),
 	}
 	fg.FlagString("g", "greeting", "A Greeting")
+
 	fg.FlagString("a", "amount", "An Amount")
+
 	dt := fg.FlagLoad("cf", "test_data/flagtest1.lz")
 
 	s, err := dt[0].PString("greeting")

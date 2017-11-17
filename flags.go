@@ -53,7 +53,9 @@ func (ff flagger) FlagLoad(f string, deflocs ...string) []LZ {
 	for k, v := range ff.flist {
 		if *v != "" {
 			cfig[0].Deets[k] = *v
+			continue
 		}
+		*v = cfig[0].PStringD("", k)
 	}
 	return cfig
 }
