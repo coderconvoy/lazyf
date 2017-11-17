@@ -49,12 +49,12 @@ func (ff flagger) FlagBool(f, cname, info string) *bool {
 	return s
 }
 
-//FlagLoad must be called after all FlagString methods and then never again
-func FlagLoad(f string, deflocs ...string) []LZ {
+//FlagLoad must be called after all FlagString methods and then never again returns []LZ for config, and selected Config Filename
+func FlagLoad(f string, deflocs ...string) ([]LZ, string) {
 	return defFlagger.FlagLoad(f, deflocs...)
 }
 
-func (ff flagger) FlagLoad(f string, deflocs ...string) []LZ {
+func (ff flagger) FlagLoad(f string, deflocs ...string) ([]LZ, string) {
 	cloc := ff.fset.String(f, "", "Location of Configuration File")
 	ff.fset.Parse(ff.args)
 
@@ -62,7 +62,7 @@ func (ff flagger) FlagLoad(f string, deflocs ...string) []LZ {
 		deflocs = []string{*cloc}
 	}
 
-	cfig, err := GetConfig(deflocs...)
+	cfig, fname, err := GetConfig(deflocs...)
 	if err != nil {
 		cfig = append(cfig, LZ{})
 	}
@@ -85,5 +85,5 @@ func (ff flagger) FlagLoad(f string, deflocs ...string) []LZ {
 		*v = cfig[0].PBoolD(false, k)
 	}
 
-	return cfig
+	return cfig, fname
 }

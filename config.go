@@ -4,36 +4,37 @@ import (
 	"github.com/pkg/errors"
 )
 
-func GetConfig(locs ...string) ([]LZ, error) {
+//GetConfig returns the config list, + selected filename, or error
+func GetConfig(locs ...string) ([]LZ, string, error) {
 	for _, v := range locs {
 		lz, err := ReadFile(v)
 		if err != nil {
 			if _, ok := err.(interface {
 				NErrs() int
 			}); ok {
-				return lz, err
+				return lz, v, err
 			}
 			continue
 		}
-		return lz, nil
+		return lz, v, nil
 	}
 
-	return []LZ{}, errors.Errorf("Config not found")
+	return []LZ{}, "", errors.Errorf("Config not found")
 
 }
 
-func GetConfigN(n int, confLocs ...string) (LZ, error) {
+func GetConfigN(n int, confLocs ...string) (LZ, string, error) {
 
-	carr, err := GetConfig(confLocs...)
+	carr, fname, err := GetConfig(confLocs...)
 
 	if err != nil {
-		return LZ{}, err
+		return LZ{}, fname, err
 	}
 
 	if len(carr) < n {
-		return LZ{}, errors.Errorf("No Entry in Config")
+		return LZ{}, fname, errors.Errorf("No Entry in Config")
 	}
 
-	return carr[n], nil
+	return carr[n], fname, nil
 
 }
