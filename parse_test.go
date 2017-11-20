@@ -13,7 +13,7 @@ func Test_Parse(t *testing.T) {
 	}
 
 	for k, v := range ts {
-		lz := ParseLZ(v.s)
+		lz := ParseLZ(v.s, false)
 		if len(lz.Deets) != v.elen {
 			t.Errorf("with %d, expected len %d, got %d", k, v.elen, len(lz.Deets))
 		}

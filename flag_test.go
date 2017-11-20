@@ -19,16 +19,17 @@ func qerr(t *testing.T, err error, msg string, fargs ...string) {
 }
 
 func Test_Flags(t *testing.T) {
-	fg := flagger{
-		args:  []string{"-g", "hello", "-s", "small", "-d", "MEGABYTES"},
-		flist: make(map[string]*string),
-		fset:  flag.NewFlagSet("test", flag.ContinueOnError),
-	}
-	gpp := fg.FlagString("g", "greeting", "A Greeting")
-	app := fg.FlagString("a", "amount", "An Amount")
-	dpp := fg.FlagString("d", "data", "Some Data")
-	spp := fg.FlagString("s", "size", "A size")
-	dt := fg.FlagLoad("cf", "test_data/flagtest1.lz")
+	fg := NewFlagger(
+		flag.NewFlagSet("test", flag.ContinueOnError),
+		[]string{"-g", "hello", "-s", "small", "-d", "MEGABYTES"},
+	)
+
+	gpp := fg.FlagString("g", "", "greeting", "A Greeting")
+	app := fg.FlagString("a", "", "amount", "An Amount")
+	dpp := fg.FlagString("d", "", "data", "Some Data")
+	spp := fg.FlagString("s", "", "size", "A size")
+	defpp := fg.FlagString("dd", "Default", "default", "A Default pointer test")
+	dt, _ := fg.FlagLoad("cf", "test_data/flagtest1.lz")
 
 	//greeting -- exists overwritten
 	s, err := dt[0].PString("greeting")
@@ -70,19 +71,26 @@ func Test_Flags(t *testing.T) {
 	}
 	pmatch(t, *dpp, s, "Data Pointer")
 
+	//def -- default pointer assignment
+	pmatch(t, "Default", *defpp, "Error on def pointer")
+
 }
 
 func Test_FileFind(t *testing.T) {
-	fg := flagger{
-		args:  []string{"-cf", "test_data/flagtest2.lz"},
-		flist: make(map[string]*string),
-		fset:  flag.NewFlagSet("test", flag.ContinueOnError),
+	fg := NewFlagger(
+		flag.NewFlagSet("test", flag.ContinueOnError),
+		[]string{"-cf", "test_data/flagtest2.lz"},
+	)
+
+	fg.FlagString("g", "", "greeting", "A Greeting")
+
+	fg.FlagString("a", "", "amount", "An Amount")
+
+	dt, fname := fg.FlagLoad("cf", "test_data/flagtest1.lz")
+
+	if fname != "test_data/flagtest2.lz" {
+		t.Errorf("File name not changed")
 	}
-	fg.FlagString("g", "greeting", "A Greeting")
-
-	fg.FlagString("a", "amount", "An Amount")
-
-	dt := fg.FlagLoad("cf", "test_data/flagtest1.lz")
 
 	s, err := dt[0].PString("greeting")
 	qerr(t, err, "No Greeting")

@@ -7,9 +7,14 @@ import (
 
 var flagloc string
 
+type stringflag struct {
+	s   *string
+	def string
+}
+
 type flagger struct {
 	fset  *flag.FlagSet
-	flist map[string]*string
+	flist map[string]stringflag
 	blist map[string]*bool
 	args  []string
 }
@@ -21,21 +26,22 @@ func NewFlagger(fset *flag.FlagSet, args []string) flagger {
 	return flagger{
 		fset:  fset,
 		args:  args,
-		flist: make(map[string]*string),
+		flist: make(map[string]stringflag),
 		blist: make(map[string]*bool),
 	}
 }
 
 //FlagString adds the flag, for setting the first section of the lzconfig
-func FlagString(f, cname, info string) *string {
-	return defFlagger.FlagString(f, cname, info)
+//def value will override pointer result if nothing is set, but will not change result of PStringD on the config
+func FlagString(f, def, cname, info string) *string {
+	return defFlagger.FlagString(f, def, cname, info)
 }
 
-func (ff flagger) FlagString(f, cname, info string) *string {
-	s := ff.fset.String(f, "", info)
+func (ff flagger) FlagString(f, def, cname, info string) *string {
+	p := ff.fset.String(f, "", info)
 
-	ff.flist[cname] = s
-	return s
+	ff.flist[cname] = stringflag{p, def}
+	return p
 }
 
 //FlagBool adds a boolean flag. False is considered unset for adding at core
@@ -69,11 +75,16 @@ func (ff flagger) FlagLoad(f string, deflocs ...string) ([]LZ, string) {
 
 	//Strings
 	for k, v := range ff.flist {
-		if *v != "" {
-			cfig[0].Deets[k] = *v
+		if *v.s != "" {
+			cfig[0].Deets[k] = *v.s
 			continue
 		}
-		*v = cfig[0].PStringD("", k)
+		fv, err := cfig[0].PString(k)
+		if err == nil {
+			*v.s = fv
+			continue
+		}
+		*v.s = v.def
 	}
 
 	//Bools are only false if not set in config, and not flagged
