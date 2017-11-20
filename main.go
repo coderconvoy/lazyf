@@ -17,7 +17,7 @@ type LZ struct {
 
 // ParseLZ takes a ":" separated string, and puts the first section as the name, and the rest as ordered details belonging to the LZ object returned
 //Used as part of the main Parsing Method, for files
-func ParseLZ(s string) LZ {
+func ParseLZ(s string, lcase bool) LZ {
 	s = strings.TrimSpace(s)
 	ss := strings.Split(s, ":")
 	res := LZ{strings.TrimSpace(ss[0]), map[string]string{}}
@@ -25,12 +25,11 @@ func ParseLZ(s string) LZ {
 		res.Deets["ex"+strconv.Itoa(k)] = strings.TrimSpace(v)
 	}
 	return res
-
 }
 
 //Read Takes a reader in .lz format and converts it to a [] of LZ
 //Errors are normally in case of missing colons etc.
-func Read(r io.Reader) ([]LZ, error) {
+func Read(r io.Reader, lcase bool) ([]LZ, error) {
 	sc := bufio.NewScanner(r)
 	res := []LZ{}
 	var curr LZ
@@ -50,7 +49,7 @@ func Read(r io.Reader) ([]LZ, error) {
 		}
 		if tr[0] == t[0] {
 			//New Entry
-			curr = ParseLZ(tr)
+			curr = ParseLZ(tr, lcase)
 			res = append(res, curr)
 			continue
 		}
@@ -67,7 +66,11 @@ func Read(r io.Reader) ([]LZ, error) {
 			errs = append(errs, LineErr{"No Colon", line})
 			continue
 		}
-		curr.Deets[strings.TrimSpace(ss[0])] = strings.TrimSpace(ss[1])
+		s := strings.TrimSpace(ss[0])
+		if lcase {
+			s = strings.ToLower(s)
+		}
+		curr.Deets[s] = strings.TrimSpace(ss[1])
 	}
 
 	if len(errs) > 0 {
@@ -79,13 +82,17 @@ func Read(r io.Reader) ([]LZ, error) {
 //ReadFile is a wrapper for Read, which takes a filename instead of a Reader
 //Errors on read error as well format errors.
 //If the error is a format error it will fulfil the interface{NErrs()int}
-func ReadFile(fname string) ([]LZ, error) {
+func ReadFile(fname string, lcase ...bool) ([]LZ, error) {
+	lc := false
+	if len(lcase) > 0 {
+		lc = lcase[0]
+	}
 	f, err := os.Open(fname)
 	if err != nil {
 		return []LZ{}, err
 	}
 	defer f.Close()
-	return Read(f)
+	return Read(f, lc)
 }
 
 //PString returns a string for the value matching the first string in ns from its properties. if none are found, this will return an error.
